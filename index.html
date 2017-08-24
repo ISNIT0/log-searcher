@@ -1,0 +1,41 @@
+<body>
+
+    <script id='template' type='text/html'>
+        <h1>Log Summary</h1>
+
+        <h3>Log Types:</h3>
+        {{#each logTypes}}
+            <span>{{@key}}:{{.}}</span><br />
+        {{/each}}
+
+        <h3>Log Tags:</h3>
+        {{#each logTags}}
+            <span>{{@key}}:{{.}}</span><br />
+        {{/each}}
+
+        <h3>Logs with 3rd argument (exception):</h3>
+        {{#each logExceptions}}
+            <span>{{@key}}:{{.}}</span><br />
+        {{/each}}
+
+        <h3>Files with and without logs:</h3>
+        {{#each filesWithLogs}}
+            <span>{{@key}}:{{.}}</span><br />
+        {{/each}}
+
+        <br /><br />
+
+        {{#each data}}
+            <h4>{{@key}} ({{this.length}}):</h4>
+            {{#each this}}
+            <code>{{.}}</code><br />
+            {{/each}}
+        {{/each}}
+
+    </script>
+</body>
+
+<script src='https://cdn.jsdelivr.net/npm/ractive'></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+    crossorigin="anonymous"></script>
+<script src='./client.js'></script>
