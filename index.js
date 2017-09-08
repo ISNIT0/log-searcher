@@ -8,7 +8,55 @@ if (!argv.dir) {
     process.exit();
 }
 
-const search = (/(Log\.(v|d|i|w|e|wtf|println|isLoggable|getStackTraceString)\([^\;]*)/g);
+const logSearches = {
+    android: /(Log\.(v|d|i|w|e|wtf|println|isLoggable|getStackTraceString)\([^\;]*)/g,
+    timber: /(Timber\.(v|d|i|w|e|wtf|tag)\([^\;]*)/g
+};
+
+const logParsers = {
+    android: function (logLine) {
+        const [type, args] = logLine.match(/Log\.([^\(]*)\(([^\)]*)/).slice(1);
+        const [tag, message, exception] = args.match(/(".*?"*|[^",\s]+)(?=\s*,|\s*$)/g);
+        return {
+            type,
+            tag,
+            message,
+            exception,
+            original: logLine
+        };
+    },
+    timber: function (logLine) {
+        const [type, args] = logLine.match(/Timber\.([^\(]*)\(([^\Z]*)/).slice(1);
+        const argsList = args.slice(0, -1).match(/(".*?"*|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (type === 'tag') {
+            return {
+                type,
+                tag: args,
+                original: logLine
+            };
+        } else {
+            const firstArgIsString = argsList[0][0] === '\'' || argsList[0][0] === '"';
+            let exception;
+            let message;
+            if (firstArgIsString) {
+                exception = undefined;
+                message = argsList.join(','); //There may be string substitution
+            } else {
+                exception = argsList[0];
+                message = argsList.slice(1).join(','); //There may be string substitution
+            }
+            return {
+                type,
+                tag: undefined,
+                message,
+                exception,
+                original: logLine
+            };
+        }
+    }
+};
+
+const mode = argv.mode || 'android';
 const path = argv.dir;
 const args = ['-r'];
 
@@ -21,14 +69,17 @@ dir.readFiles(__dirname + '/' + path, {
     },
     function (err, content, fileName, next) {
         if (err) throw err;
-        const res = content.match(search) || [];
+        const res = content.match(logSearches[mode]) || [];
         const fn = path.slice(1) + fileName.slice(__dirname.length + 1);
-        fileMatches[fn] = res;
+        fileMatches[fn] = res.map(logParsers[mode]);
         next(null);
     },
     function (err, files) {
         console.info(`Found '${files.length}' files`);
-        fs.writeFileSync('./data.json', JSON.stringify(fileMatches), 'utf8');
+        fs.writeFileSync('./data.json', JSON.stringify({
+            args: argv,
+            data: fileMatches
+        }), 'utf8');
         console.info(`Successfully written to ./data.json
         
         *---------------------------------------*

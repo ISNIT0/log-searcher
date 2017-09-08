@@ -2,18 +2,27 @@ const r = new Ractive({
     el: 'body',
     template: '#template',
     computed: {
-        logTypes: function () {
+        totalLogs: function () {
             const self = this;
             const data = self.get('data');
-            const search = /Log\.(v|d|i|w|e|wtf|println|isLoggable|getStackTraceString)/g;
             return Object.keys(data)
                 .reduce((acc, key) => {
                     const matches = data[key];
-                    matches.forEach(str => {
-                        const type = str.match(search);
+                    return acc + matches.length;
+                }, 0);
+        },
+        logTypes: function () {
+            const self = this;
+            const data = self.get('data');
+            return Object.keys(data)
+                .reduce((acc, key) => {
+                    const matches = data[key];
+                    matches.forEach(({
+                        type
+                    }) => {
                         if (type) {
-                            acc[type[0]] = acc[type[0]] || 0;
-                            acc[type[0]]++;
+                            acc[type] = acc[type] || 0;
+                            acc[type]++;
                         }
                     });
                     return acc;
@@ -25,10 +34,13 @@ const r = new Ractive({
             return Object.keys(data)
                 .reduce((acc, key) => {
                     const matches = data[key];
-                    matches.forEach(str => {
-                        const tag = str.split('(')[1].split(',')[0];
-                        acc[tag] = acc[tag] || 0;
-                        acc[tag]++;
+                    matches.forEach(({
+                        tag
+                    }) => {
+                        if (tag) {
+                            acc[tag] = acc[tag] || 0;
+                            acc[tag]++;
+                        }
                     });
                     return acc;
                 }, {});
@@ -39,11 +51,12 @@ const r = new Ractive({
             return Object.keys(data)
                 .reduce((acc, key) => {
                     const matches = data[key];
-                    matches.forEach(str => {
-                        const withoutStrings = str.replace(/"[^"]*"/g, '');
-                        const exploded = withoutStrings.split(',');
-                        if (exploded.length === 3) {
-                            acc[str] = key;
+                    matches.forEach(({
+                        exception,
+                        original
+                    }) => {
+                        if (exception) {
+                            acc[original] = key;
                         }
                     });
                     return acc;
@@ -74,8 +87,15 @@ const r = new Ractive({
 
 fetch('./data.json')
     .then(d => d.json())
-    .then(data => {
+    .then(({
+        args,
+        data
+    }) => {
         r.set('data',
             data
+        );
+        r.set('title',
+            Object.keys(args)
+            .map(key => `--${key} ${args[key]}`).join(' ')
         );
     });

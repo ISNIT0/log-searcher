@@ -2,8 +2,11 @@
 
     <script id='template' type='text/html'>
         <h1>Log Summary</h1>
+        <code>{{title}}</code>
 
-        <h3>Log Types:</h3>
+        <br />
+        
+        <h3>Log Types ({{totalLogs}}):</h3>
         {{#each logTypes}}
             <span>{{@key}}:{{.}}</span><br />
         {{/each}}
@@ -13,7 +16,7 @@
             <span>{{@key}}:{{.}}</span><br />
         {{/each}}
 
-        <h3>Logs with 3rd argument (exception):</h3>
+        <h3>Logs with exceptions ({{Object.keys(logExceptions).length}}):</h3>
         {{#each logExceptions}}
             <span>{{@key}}:{{.}}</span><br />
         {{/each}}
@@ -25,10 +28,11 @@
 
         <br /><br />
 
+    
         {{#each data}}
             <h4>{{@key}} ({{this.length}}):</h4>
             {{#each this}}
-            <code>{{.}}</code><br />
+            <code>{{original}}</code><br />
             {{/each}}
         {{/each}}
 
