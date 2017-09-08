@@ -58,16 +58,11 @@ const logParsers = {
 };
 
 const mode = argv.mode || 'android';
-const workingPath = argv.dir;
+const workingPath = path.resolve(__dirname, argv.dir);
+console.info(`"dir" argument resovled to [${workingPath}]`);
 const args = ['-r'];
 
 const fileMatches = {};
-
-if (!path.isAbsolute(workingPath)) {
-	console.info("Converting: " + path + " to absolute path");
-	workingPath = __dirname + '/' + workingPath;
-	console.info("Which is: " + workingPath);
-}
 
 console.info('Recursively scanning for *.java files in:', workingPath);
 
