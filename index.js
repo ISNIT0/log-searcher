@@ -1,6 +1,7 @@
 const argv = require('yargs').argv
 const dir = require('node-dir');
 const fs = require('fs');
+const path = require('path');
 
 
 if (!argv.dir) {
@@ -57,20 +58,26 @@ const logParsers = {
 };
 
 const mode = argv.mode || 'android';
-const path = argv.dir;
+const workingPath = argv.dir;
 const args = ['-r'];
 
 const fileMatches = {};
 
-console.info('Recursively scanning for *.java files in:', __dirname + '/' + path);
+if (!path.isAbsolute(workingPath)) {
+	console.info("Converting: " + path + " to absolute path");
+	workingPath = __dirname + '/' + workingPath;
+	console.info("Which is: " + workingPath);
+}
 
-dir.readFiles(__dirname + '/' + path, {
+console.info('Recursively scanning for *.java files in:', workingPath);
+
+dir.readFiles(workingPath, {
         match: /.java$/
     },
     function (err, content, fileName, next) {
         if (err) throw err;
         const res = content.match(logSearches[mode]) || [];
-        const fn = path.slice(1) + fileName.slice(__dirname.length + 1);
+        const fn = workingPath.slice(1) + fileName.slice(__dirname.length + 1);
         fileMatches[fn] = res.map(logParsers[mode]);
         next(null);
     },
