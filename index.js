@@ -1,8 +1,15 @@
+const semver = require('semver');
 const argv = require('yargs').argv
 const dir = require('node-dir');
 const fs = require('fs');
 const path = require('path');
+const package = require('./package.json');
 
+
+require('scribe-js')();
+let console = process.console;
+
+console.log(`Starting Log-Searcher version [${package.version}]`);
 
 if (!argv.dir) {
     console.log('Please specify a directory to scan: --dir ../kiwix-android/app/src/main');
@@ -79,7 +86,9 @@ dir.readFiles(workingPath, {
     function (err, files) {
         console.info(`Found '${files.length}' files`);
         fs.writeFileSync('./data.json', JSON.stringify({
+            version: package.version,
             args: argv,
+            generatedAt: Date.now(),
             data: fileMatches
         }), 'utf8');
         console.info(`Successfully written to ./data.json
